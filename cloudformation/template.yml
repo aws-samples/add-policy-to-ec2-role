@@ -1,0 +1,143 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Creates Lambda function and subscribe it to ip-ranges.json SNS topic.
+  Lambda function will create or update AWS resources according to the configuration on services.json file inside it.
+
+Parameters:
+  ScheduleExpression:
+    Type: String
+    Default: rate(1 hour)
+    AllowedValues:
+      - rate(5 minutes)
+      - rate(1 hour)
+      - rate(1 day)
+    Description: EventBridge schedule event.
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    # checkov:skip=CKV_AWS_116:Code log errors on CloudWatch logs
+    # checkov:skip=CKV_AWS_117:Not required to run inside a VPC
+    # checkov:skip=CKV_AWS_173:Variable is not sensitive
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W58
+            reason: "Permission is defined with much restriction as possible"
+          - id: W89
+            reason: "Not required to run inside a VPC"
+    Properties: 
+      Description: 'This Lambda function, invoked by an EventBridge sheduler rule, updates the IAM roles currectly associated with an EC2 instance.'
+      Architectures:
+        - 'arm64'
+      Environment: 
+        Variables:
+          LOG_LEVEL: 'INFO'
+          INSTANCE_PROFILE_NAME: ''
+      Handler: 'add_policy_to_ec2_instance.lambda_handler'
+      MemorySize: 256
+      Role: !GetAtt 'LambdaIamRole.Arn'
+      Runtime: python3.10
+      Timeout: 300
+      ReservedConcurrentExecutions: 2
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              print(event)
+
+  LambdaIamRole:
+    Type: AWS::IAM::Role
+    # checkov:skip=CKV_AWS_111:CloudWatch Logs doesn't support condition
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W11
+            reason: "Policy has conditions when it is allowed"
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement: 
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Description: Add Policies to EC2 instance Lambda
+      Policies:
+        - PolicyName: 'IAM'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'iam:AttachRolePolicy'
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*'
+                Condition:
+                  ArnEquals:
+                    'iam:PolicyARN':
+                      - 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy'
+                      - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+                      # You can also specify the ARN of an AWS managed policy in a policy's Condition element.
+                      # The ARN of an AWS managed policy uses the special alias "aws" in the policy ARN instead of an account ID, as in this example:
+                      # "Condition": {"ArnEquals": 
+                      #   {"iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonEC2FullAccess"}
+                      # }
+                      # Reference: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_controlling.html#access_controlling-resources
+
+              - Effect: 'Allow'
+                Action: 'iam:GetInstanceProfile'
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:instance-profile/*'
+
+              - Effect: 'Allow'
+                Action: 'iam:ListAttachedRolePolicies'
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*'
+
+
+        - PolicyName: 'EC2'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'ec2:DescribeInstances'
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    'ec2:Region': !Ref AWS::Region
+
+              - Effect: 'Allow'
+                Action: 'ec2:AssociateIamInstanceProfile'
+                Resource: !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
+                Condition:
+                  StringEquals:
+                    'ec2:Region': !Ref AWS::Region
+
+              - Effect: 'Allow'
+                Action: 'iam:PassRole'
+                Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*'
+                Condition:
+                  StringEquals:
+                    'iam:PassedToService': 'ec2.amazonaws.com'
+                  ArnLike:
+                    'iam:AssociatedResourceARN':
+                      - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
+
+  LambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties: 
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref LambdaFunction
+      Principal: 'events.amazonaws.com'
+      SourceArn: !GetAtt "ScheduledRule.Arn"
+
+  ScheduledRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Run Lambda to add policies to EC2 instance"
+      ScheduleExpression: !Ref ScheduleExpression
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !GetAtt "LambdaFunction.Arn"
+          Id: "TargetFunctionV1"
+
