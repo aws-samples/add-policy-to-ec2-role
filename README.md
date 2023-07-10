@@ -1,4 +1,4 @@
-## Automatically update AWS resources with AWS IP Ranges
+## Automatically update IAM roles with defined policies
 
 This project creates Lambda function that automatically add required AWS Identity and Access Management (IAM) policies to current Amazon Elastic Compute Cloud (Amazon EC2) instance profiles or associate a profile to EC2 instances without a profile associated.  
 You can use it as a Lambda function scheduled at a recurrent time using EventBridge Rule or manually running the python code when required.
