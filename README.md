@@ -141,7 +141,7 @@ Terraform template uses the following providers:
 * aws
 * archive
 
-> **IMPORTANT:** Please, use Terraform version 1.3.7 or higher
+> **IMPORTANT:** Please, use Terraform version 1.5.2 or higher
 
 ### 1. Initialize Terraform state
 ```bash
