@@ -40,7 +40,7 @@ The CloudFormation template `cloudformation/template.yml` creates a stack with t
 
 ## Lambda configuration
 
-By default, Lambda will add the following policies to any role that is associated with an EC2 instance. If policie is already attached to the role, it will do nothing.
+By default, Lambda will add the following policies to any role that is associated with an EC2 instance. If policy is already attached to the role, it will do nothing.
 
 If you need to add more policies, change the list associated with variable `POLICIES_TO_ADD`.
 
