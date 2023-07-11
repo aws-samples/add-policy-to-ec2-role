@@ -66,6 +66,21 @@ Resources:
             Action: sts:AssumeRole
       Description: Add Policies to EC2 instance Lambda
       Policies:
+        - PolicyName: 'CloudWatchLogs'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*'
+
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*LambdaFunction*:*'
+
         - PolicyName: 'IAM'
           PolicyDocument:
             Version: '2012-10-17'
