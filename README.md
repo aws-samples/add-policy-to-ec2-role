@@ -59,6 +59,12 @@ You can also set Lambda environment variable called `INSTANCE_PROFILE_NAME` with
 
 Also, if this environment variable is empty or not found, it will do nothing!
 
+You can list your current IAM instance profiles using AWS CLI command below:
+
+```shell
+aws iam list-instance-profiles --query 'sort_by(InstanceProfiles, &InstanceProfileName)[].InstanceProfileName'
+```
+
 
 ## Setup
 
