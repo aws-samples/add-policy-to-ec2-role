@@ -197,7 +197,7 @@ After successful invocation, you should receive the response below with no error
 }
 ```
 
-The content of the `lambda_return.json` will list all AWS resources created or updated by the Lambda function with IP ranges from configured services.
+The content of the `lambda_return.json` will list all roles updated and instances with profile added.
 
 ### 1b. Trigger a test Lambda invocation with the AWS Console
 

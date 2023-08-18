@@ -3,8 +3,7 @@
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >
-  Creates Lambda function and subscribe it to ip-ranges.json SNS topic.
-  Lambda function will create or update AWS resources according to the configuration on services.json file inside it.
+  Creates Lambda function and EventBridge schedule to update roles associated with EC2 instances.
 
 Parameters:
   ScheduleExpression:
@@ -30,7 +29,7 @@ Resources:
           - id: W89
             reason: "Not required to run inside a VPC"
     Properties: 
-      Description: 'This Lambda function, invoked by an EventBridge sheduler rule, updates the IAM roles currectly associated with an EC2 instance.'
+      Description: 'This Lambda function, invoked by an EventBridge scheduler rule, updates the IAM roles currectly associated with an EC2 instance.'
       Architectures:
         - 'arm64'
       Environment: 
