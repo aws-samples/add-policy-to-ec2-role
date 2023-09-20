@@ -150,7 +150,7 @@ resource "aws_lambda_function" "add_policy_to_ec2_instance" {
   description                    = "This Lambda function, invoked by an EventBridge rule, updates IAM role with policies specified"
   role                           = aws_iam_role.add_policy_to_ec2_instance.arn
   handler                        = "add_policy_to_ec2_instance.lambda_handler"
-  runtime                        = "python3.10"
+  runtime                        = "python3.11"
   timeout                        = 300
   reserved_concurrent_executions = 2
   memory_size                    = 256
