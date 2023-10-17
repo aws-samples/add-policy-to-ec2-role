@@ -11,7 +11,7 @@ In order to allow SSM Agent and CloudWatch Agent to communicate with their respe
 
 The CloudFormation template `cloudformation/template.yml` creates a stack with the following resources:
 
-1. AWS Lambda function. The function's code is in `lambda/add_policy_to_ec2_instance.py` and is written in Python compatible with version 3.10.
+1. AWS Lambda function. The function's code is in `lambda/add_policy_to_ec2_instance.py` and is written in Python compatible with version 3.11.
 1. Lambda function's execution role.
 1. Event Bridge role to execute Lambda at a regular time.
 
@@ -52,7 +52,10 @@ POLICIES_TO_ADD = [
 ```
 
 > **NOTE**  
-> It doesn't work with in-line policies!
+> It doesn't work with in-line policies!  
+> 
+> If you have a multi-account environment with AWS Organizations, you should use Default Host Management Configuration (DHMC) from AWS Systems Manager.  
+> https://aws.amazon.com/about-aws/whats-new/2023/10/enable-aws-systems-manager-ec2-instances-organization/
 
 
 You can also set Lambda environment variable called `INSTANCE_PROFILE_NAME` with the name of the IAM instance profile to associate with EC2 instance. It will only associate this instance profile if the instance doesn't have any profile associated yet.
